@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>ӄʊռɖǟʟ | Verify OTP</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- Bootstrap -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600&family=Playfair+Display:wght@600&family=Poppins:wght@300;400;500&display=swap" rel="stylesheet">
+
+<style>
+:root{
+    --rose-dark:#8b4a55;
+    --rose-main:#b76e79;
+    --rose-light:#f7d6cc;
+    --soft:#fdf8f2;
+}
+
+body{
+    font-family:'Poppins',sans-serif;
+    background:linear-gradient(135deg,#fff,var(--soft));
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+}
+
+/* CARD */
+.otp-card{
+    background:white;
+    border-radius:26px;
+    box-shadow:0 25px 60px rgba(0,0,0,.15);
+    padding:40px;
+}
+
+/* BRAND */
+.brand{
+    font-family:'Cinzel',serif;
+    font-size:28px;
+    letter-spacing:4px;
+    text-transform:lowercase;
+    background:linear-gradient(
+        135deg,
+        var(--rose-dark),
+        var(--rose-main),
+        var(--rose-light),
+        var(--rose-main),
+        var(--rose-dark)
+    );
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
+}
+
+/* INPUT */
+.form-control{
+    border-radius:50px;
+    padding:12px 18px;
+    text-align:center;
+    letter-spacing:6px;
+    font-size:20px;
+}
+.form-control:focus{
+    border-color:var(--rose-main);
+    box-shadow:0 0 0 .15rem rgba(183,110,121,.25);
+}
+
+/* BUTTON */
+.btn-verify{
+    border-radius:50px;
+    padding:12px;
+    background:linear-gradient(135deg,var(--rose-main),var(--rose-light));
+    border:none;
+    color:white;
+    font-weight:500;
+    box-shadow:0 10px 25px rgba(183,110,121,.35);
+    transition:.3s;
+}
+.btn-verify:hover{
+    transform:translateY(-2px);
+    box-shadow:0 15px 35px rgba(183,110,121,.45);
+}
+
+/* MESSAGE */
+#msg{
+    font-size:14px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+<div class="row justify-content-center">
+<div class="col-md-5 col-lg-4">
+
+<div class="otp-card">
+
+<div class="text-center mb-4">
+    <div class="brand">ӄʊռɖǟʟ</div>
+    <p class="text-muted mt-2">Verify your email to continue ✨</p>
+</div>
+
+<input class="form-control mb-4" id="otp" placeholder="● ● ● ● ● ●" maxlength="6">
+
+<button class="btn btn-verify w-100" onclick="verifyOtp()">
+Verify & Continue
+</button>
+
+<div id="msg" class="text-center mt-3"></div>
+
+<div class="text-center mt-4 text-muted" style="font-size:13px;">
+Didn’t receive OTP? Please check spam folder.
+</div>
+
+</div>
+
+</div>
+</div>
+</div>
+
+<script>
+function verifyOtp() {
+    const email = localStorage.getItem("otp_email");
+    const otp = document.getElementById("otp").value;
+
+    fetch("/verify-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email, otp: otp })
+    })
+    .then(res => res.json())
+    .then(res => {
+        if (res.success) {
+            document.getElementById("msg").innerHTML =
+                "<span class='text-success'>Account created successfully 🎉</span>";
+
+            setTimeout(() => {
+                window.location.href = "/login";
+            }, 1500);
+        } else {
+            document.getElementById("msg").innerHTML =
+                "<span class='text-danger'>" + res.message + "</span>";
+        }
+    })
+    .catch(err => {
+        document.getElementById("msg").innerHTML =
+            "<span class='text-danger'>Something went wrong ❌</span>";
+        console.error(err);
+    });
+}
+</script>
+
+</body>
+</html>

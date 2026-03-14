@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Order Tracking | Kundal</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600&family=Playfair+Display:wght@600&family=Poppins:wght@300;400;500&display=swap" rel="stylesheet">
+
+<style>
+:root{
+    --rose-dark:#8b4a55;
+    --rose-main:#b76e79;
+    --rose-light:#f7d6cc;
+    --soft:#fdf8f2;
+}
+
+body{
+    background:var(--soft);
+    font-family:'Poppins',sans-serif;
+    padding-top:90px;
+}
+
+/* NAVBAR */
+.navbar{
+    background:rgba(255,255,255,0.85);
+    backdrop-filter:blur(10px);
+}
+
+.navbar-brand{
+    font-family:'Cinzel',serif;
+    font-size:28px;
+    letter-spacing:3px;
+    background:linear-gradient(135deg,var(--rose-dark),var(--rose-main),var(--rose-light));
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
+}
+
+.nav-avatar{
+    width:42px;
+    height:42px;
+    border-radius:50%;
+    object-fit:cover;
+}
+
+/* CARD */
+.card{
+    border:none;
+    border-radius:20px;
+    box-shadow:0 15px 40px rgba(0,0,0,.08);
+}
+
+/* TRACKER */
+.tracker{
+    display:flex;
+    justify-content:space-between;
+    position:relative;
+    margin:50px 0;
+}
+
+.tracker::before{
+    content:"";
+    position:absolute;
+    top:22px;
+    left:0;
+    right:0;
+    height:4px;
+    background:#e9d5cf;
+    z-index:0;
+}
+
+.tracker-step{
+    text-align:center;
+    flex:1;
+    position:relative;
+    z-index:1;
+}
+
+.tracker-circle{
+    width:45px;
+    height:45px;
+    border-radius:50%;
+    background:#e9d5cf;
+    line-height:45px;
+    color:white;
+    margin:auto;
+    transition:.3s ease;
+}
+
+.tracker-active .tracker-circle{
+    background:linear-gradient(135deg,var(--rose-main),var(--rose-light));
+    box-shadow:0 0 12px rgba(183,110,121,0.6);
+}
+
+.tracker-active p{
+    color:var(--rose-main);
+    font-weight:600;
+}
+
+.tracker-cancelled .tracker-circle{
+    background:#dc3545;
+}
+
+.tracker-cancelled p{
+    color:#dc3545;
+    font-weight:bold;
+}
+
+/* BUTTONS */
+.btn-primary{
+    background:var(--rose-main);
+    border:none;
+    border-radius:50px;
+}
+.btn-primary:hover{
+    background:var(--rose-dark);
+}
+
+.btn-danger{
+    border-radius:50px;
+}
+
+.btn-outline-secondary{
+    border-radius:50px;
+}
+
+/* FOOTER */
+footer{
+    background:#111;
+    color:#aaa;
+    padding:40px 0;
+    margin-top:60px;
+    text-align:center;
+}
+</style>
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar navbar-expand-lg shadow-sm fixed-top">
+<div class="container">
+<a class="navbar-brand" href="/">ӄʊռɖǟʟ</a>
+
+<div class="ms-auto">
+<div class="dropdown d-inline-block">
+<a href="#" data-bs-toggle="dropdown">
+<img src="{{ url_for('static', filename='Image/user-icon.png') }}"
+     class="nav-avatar">
+</a>
+
+<ul class="dropdown-menu dropdown-menu-end">
+<li><a class="dropdown-item" href="/profile">Profile</a></li>
+<li><a class="dropdown-item" href="/address">Address</a></li>
+<li><a class="dropdown-item" href="/orders">My Orders</a></li>
+<li><a class="dropdown-item" href="/cart">Add To Cart</a></li>
+<li><a class="dropdown-item" href="/chat-support">Chat Support</a></li>
+<li><a class="dropdown-item" href="/change_password">Change Password</a></li>
+<li><hr class="dropdown-divider"></li>
+<li><a class="dropdown-item text-danger" href="/logout">Logout</a></li>
+</ul>
+</div>
+</div>
+</div>
+</nav>
+
+<!-- ORDER TRACKING -->
+<div class="container mt-5">
+
+<div class="card p-4">
+
+<h4 style="font-family:'Playfair Display',serif;">📦 Order Tracking</h4>
+
+<p class="text-muted mb-4">
+<strong>Order ID:</strong> {{ order.id }} |
+<strong>Placed on:</strong> {{ order.created_at.strftime("%d %b %Y") }}
+</p>
+
+{% set steps = ['Placed', 'Shipped', 'Completed'] %}
+
+<div class="tracker">
+
+{% for step in steps %}
+<div class="tracker-step
+{% if steps.index(step) <= steps.index(order.status)
+      and order.status != 'Cancelled' %}
+tracker-active
+{% endif %}
+">
+<div class="tracker-circle">
+{% if steps.index(step) <= steps.index(order.status)
+      and order.status != 'Cancelled' %}
+✓
+{% else %}
+•
+{% endif %}
+</div>
+
+<p class="mt-2">{{ step }}</p>
+</div>
+{% endfor %}
+
+{% if order.status == 'Cancelled' %}
+<div class="tracker-step tracker-cancelled">
+<div class="tracker-circle">✕</div>
+<p class="mt-2">Cancelled</p>
+</div>
+{% endif %}
+
+</div>
+
+{% if order.status not in ["Shipped","Completed","Cancelled"] %}
+<hr>
+
+<div class="border rounded-4 p-4 mt-4">
+<h5 class="text-danger">Cancel Order</h5>
+
+<form method="post" action="/order/cancel/{{ order.id }}"
+onsubmit="return confirm('Are you sure you want to cancel this order?');">
+
+<div class="form-check">
+<input class="form-check-input" type="checkbox" name="reason" value="Changed my mind">
+<label class="form-check-label">Changed my mind</label>
+</div>
+
+<div class="form-check">
+<input class="form-check-input" type="checkbox" name="reason" value="Ordered by mistake">
+<label class="form-check-label">Ordered by mistake</label>
+</div>
+
+<div class="form-check">
+<input class="form-check-input" type="checkbox" name="reason" value="Delivery delay">
+<label class="form-check-label">Delivery delay</label>
+</div>
+
+<button class="btn btn-danger mt-3">Cancel Order</button>
+</form>
+</div>
+{% endif %}
+
+<hr>
+
+<h5>🧾 Order Summary</h5>
+<ul class="list-group mb-4">
+{% for item in items %}
+<li class="list-group-item d-flex justify-content-between">
+{{ item.product_name }} (x{{ item.quantity }})
+<span>₹{{ item.price }}</span>
+</li>
+{% endfor %}
+</ul>
+
+<p class="fw-bold text-end">
+Total: ₹{{ order.total_amount }}
+</p>
+
+{% if order.status == 'Completed' %}
+<div class="alert alert-success mt-4">
+Order completed successfully ✨
+<br>
+<a href="/invoice/{{ order.id }}" class="btn btn-primary btn-sm mt-2">
+View Invoice
+</a>
+</div>
+{% endif %}
+
+{% if order.status == 'Cancelled' %}
+<div class="alert alert-danger mt-4">
+This order has been cancelled.
+</div>
+{% endif %}
+
+</div>
+
+<div class="text-center mt-4">
+<a href="/orders" class="btn btn-outline-secondary btn-sm">
+← Back to My Orders
+</a>
+</div>
+
+</div>
+
+<footer>
+© 2026 Kundal Jewellery  
+<br>
+Crafted with love & art 🤍
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>

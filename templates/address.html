@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>My Address – Kundal Jewellery</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- Bootstrap -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Playfair+Display:wght@600&family=Poppins:wght@300;400;500&display=swap" rel="stylesheet">
+
+<style>
+:root{
+    --rose-dark:#8b4a55;
+    --rose-main:#b76e79;
+    --rose-light:#f7d6cc;
+    --soft:#fdf8f2;
+    --dark:#1c1c1c;
+}
+
+body{
+    font-family:'Poppins',sans-serif;
+    background:var(--soft);
+    color:#333;
+    padding-top:90px;
+}
+
+/* NAVBAR */
+.navbar{
+    background:rgba(255,255,255,.9);
+    backdrop-filter:blur(10px);
+}
+
+.navbar-brand{
+    font-family:'Cinzel',serif;
+    font-size:30px;
+    letter-spacing:4px;
+    background:linear-gradient(135deg,var(--rose-dark),var(--rose-main),var(--rose-light));
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
+}
+
+/* DROPDOWN */
+.dropdown-menu{
+    border:none;
+    border-radius:15px;
+    box-shadow:0 15px 35px rgba(0,0,0,.15);
+}
+
+/* BOX CARD */
+.box{
+    background:#fff;
+    padding:30px;
+    border-radius:20px;
+    box-shadow:0 20px 45px rgba(0,0,0,.08);
+    margin-bottom:30px;
+}
+
+/* ADDRESS CARD */
+.address-card{
+    border:1px solid #eee;
+    border-radius:15px;
+    padding:20px;
+    margin-bottom:20px;
+    transition:.3s ease;
+}
+.address-card:hover{
+    transform:translateY(-5px);
+    box-shadow:0 10px 30px rgba(0,0,0,.12);
+}
+
+/* BUTTONS */
+.btn-rose{
+    background:var(--rose-main);
+    border:none;
+    border-radius:50px;
+    color:white;
+}
+.btn-rose:hover{
+    background:var(--rose-dark);
+}
+
+.btn-outline-rose{
+    border:1px solid var(--rose-main);
+    color:var(--rose-main);
+    border-radius:50px;
+}
+.btn-outline-rose:hover{
+    background:var(--rose-main);
+    color:#fff;
+}
+
+footer{
+    margin-top:60px;
+    padding:40px 0;
+    background:#111;
+    color:#aaa;
+    text-align:center;
+}
+</style>
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar navbar-expand-lg fixed-top shadow-sm">
+<div class="container">
+
+<a class="navbar-brand" href="/">ӄʊռɖǟʟ</a>
+
+<div class="ms-auto">
+<div class="dropdown">
+<a href="#" class="fw-bold text-decoration-none dropdown-toggle"
+   data-bs-toggle="dropdown">
+    ✨ {{ session.user.name }}
+</a>
+
+<ul class="dropdown-menu dropdown-menu-end">
+    <li><a class="dropdown-item" href="/profile">Profile</a></li>
+    <li><a class="dropdown-item" href="/address">Address</a></li>
+    <li><a class="dropdown-item" href="/orders">My Orders</a></li>
+    <li><a class="dropdown-item" href="/cart">Cart</a></li>
+    <li><a class="dropdown-item" href="/chat-support">Chat Support</a></li>
+    <li><a class="dropdown-item" href="/change_password">Change Password</a></li>
+    <li><hr class="dropdown-divider"></li>
+    <li><a class="dropdown-item text-danger" href="/logout">Logout</a></li>
+</ul>
+</div>
+</div>
+
+</div>
+</nav>
+
+<div class="container mt-4">
+
+<!-- SAVED ADDRESSES -->
+<div class="box">
+<h4 class="mb-4">📍 Saved Addresses</h4>
+
+{% if addresses %}
+    {% for a in addresses %}
+    <div class="address-card">
+
+        <!-- SELECT ADDRESS -->
+        <form method="post">
+            <input type="hidden" name="select_address" value="1">
+            <input type="hidden" name="address_id" value="{{ a.id }}">
+
+            <div class="form-check">
+                <input class="form-check-input"
+                       type="radio"
+                       name="delivery"
+                       {% if a.is_default %}checked{% endif %}
+                       onchange="this.form.submit()">
+
+                <label class="form-check-label">
+                    <strong>{{ a.full_name }}</strong><br>
+                    {{ a.address_line }}, {{ a.city }},
+                    {{ a.state }} - {{ a.pincode }}<br>
+                    📞 {{ a.phone }}
+                </label>
+            </div>
+        </form>
+
+        <!-- EDIT + DELETE -->
+        <div class="mt-3 d-flex gap-2">
+            <a href="/address?edit={{ a.id }}" 
+               class="btn btn-sm btn-outline-rose">
+                Edit
+            </a>
+
+            <form method="post" onsubmit="return confirm('Delete this address?');">
+                <input type="hidden" name="delete_address" value="1">
+                <input type="hidden" name="address_id" value="{{ a.id }}">
+                <button class="btn btn-sm btn-outline-danger">
+                    Delete
+                </button>
+            </form>
+        </div>
+
+    </div>
+    {% endfor %}
+{% else %}
+    <p class="text-muted">No address saved yet.</p>
+{% endif %}
+</div>
+
+<!-- ADD / EDIT ADDRESS -->
+<div class="box">
+<h4 class="mb-4">
+{% if edit_address %}✏️ Edit Address{% else %}➕ Add New Address{% endif %}
+</h4>
+
+<form method="post">
+<input type="hidden" name="save_address" value="1">
+{% if edit_address %}
+<input type="hidden" name="address_id" value="{{ edit_address.id }}">
+{% endif %}
+
+<div class="mb-3">
+<input type="text" name="full_name" class="form-control"
+placeholder="Full Name"
+value="{{ edit_address.full_name if edit_address }}" required>
+</div>
+
+<div class="mb-3">
+<input type="text" name="phone" class="form-control"
+placeholder="Phone"
+value="{{ edit_address.phone if edit_address }}" required>
+</div>
+
+<div class="mb-3">
+<input type="text" name="flat" class="form-control"
+placeholder="Flat / Building No."
+value="{{ edit_address.address_line.split(',')[0] if edit_address }}" required>
+</div>
+
+<div class="mb-3">
+<input type="text" name="street" class="form-control"
+placeholder="Street Name"
+value="{{ edit_address.address_line.split(',')[1] if edit_address }}" required>
+</div>
+
+<div class="mb-3">
+<input type="text" name="landmark" class="form-control"
+placeholder="Landmark (optional)"
+value="{{ edit_address.address_line.split(',')[2] if edit_address }}">
+</div>
+
+<div class="row">
+<div class="col-md-4 mb-3">
+<input type="text" name="city" class="form-control"
+placeholder="City"
+value="{{ edit_address.city if edit_address }}" required>
+</div>
+
+<div class="col-md-4 mb-3">
+<input type="text" name="state" class="form-control"
+placeholder="State"
+value="{{ edit_address.state if edit_address }}" required>
+</div>
+
+<div class="col-md-4 mb-3">
+<input type="text" name="pincode" class="form-control"
+placeholder="Pincode"
+value="{{ edit_address.pincode if edit_address }}" required>
+</div>
+</div>
+
+<button class="btn btn-rose w-100">
+{% if edit_address %}Update Address{% else %}Save Address{% endif %}
+</button>
+</form>
+</div>
+
+<div class="text-center">
+<a href="/" class="btn btn-outline-rose btn-sm">← Back to Home</a>
+</div>
+
+</div>
+
+<!-- FOOTER -->
+<footer>
+<div class="container">
+<p class="mb-1">© 2026 Kundal Jewellery</p>
+<p>Crafted with love & art 🤍</p>
+</div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>

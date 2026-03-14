@@ -1,0 +1,154 @@
+<!-- templates/base.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}ReTech{% endblock %}</title>
+
+    <style>
+        /* ===== GLOBAL RESET ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        body {
+            background: #f5f7fb;
+            color: #222;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        /* ===== HEADER / NAVBAR ===== */
+        header.navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 30px;
+            background: #111827;
+            color: #fff;
+        }
+
+        .logo {
+            font-size: 22px;
+            font-weight: bold;
+            color: #4f46e5;
+        }
+
+        nav {
+            display: flex;
+            align-items: center;
+            gap: 22px;
+        }
+
+        nav a {
+            color: #e5e7eb;
+            font-size: 14px;
+            transition: 0.3s;
+        }
+
+        nav a:hover {
+            color: #ffffff;
+        }
+
+        /* ===== USER DROPDOWN ===== */
+        .user-menu {
+            position: relative;
+            cursor: pointer;
+        }
+
+        .username {
+            font-weight: 500;
+            color: #fff;
+        }
+
+        .dropdown {
+            position: absolute;
+            top: 35px;
+            right: 0;
+            width: 180px;
+            background: #ffffff;
+            color: #111;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            display: none;
+            overflow: hidden;
+            z-index: 1000;
+        }
+
+        .dropdown a {
+            display: block;
+            padding: 12px 14px;
+            font-size: 14px;
+            border-bottom: 1px solid #f1f1f1;
+            transition: 0.3s;
+        }
+
+        .dropdown a:hover {
+            background: #f4f4ff;
+            color: #4f46e5;
+        }
+
+        .user-menu:hover .dropdown {
+            display: block;
+        }
+
+        /* ===== MAIN CONTENT ===== */
+        main {
+            padding: 30px;
+            min-height: calc(100vh - 140px);
+        }
+
+        /* ===== FOOTER ===== */
+        footer.footer {
+            background: #111827;
+            color: #d1d5db;
+            text-align: center;
+            padding: 15px;
+            font-size: 13px;
+        }
+    </style>
+
+</head>
+<body>
+
+<!-- ===== HEADER ===== -->
+<header class="navbar">
+    <div class="logo">ReTech</div>
+
+    <nav>
+        <a href="/">Home</a>
+        <a href="/products">Products</a>
+
+        <div class="user-menu">
+            <span class="username">{{ session.username }}</span>
+            <div class="dropdown">
+                <a href="/profile">Profile</a>
+                <a href="/address">Address</a>
+                <a href="/orders">My Orders</a>
+                <a href="/support">Chat Support</a>
+                <a href="/faq">FAQ</a>
+                <a href="/change-password">Change Password</a>
+                <a href="/logout">Logout</a>
+            </div>
+        </div>
+    </nav>
+</header>
+
+<!-- ===== PAGE CONTENT ===== -->
+<main>
+    {% block content %}{% endblock %}
+</main>
+
+<!-- ===== FOOTER ===== -->
+<footer class="footer">
+    © 2026 ReTech. All rights reserved.
+</footer>
+
+</body>
+</html>
