@@ -103,6 +103,12 @@ app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
 # ---------------- STORES ----------------
 otp_store = {}
+def clean_expired_otps(store):
+    now = time.time()
+    for key in list(store.keys()):
+        if now - store[key]["time"] > OTP_EXPIRY:
+            del store[key]
+
 
 # ================== CHANGE PASSWORD WITH OTP ==================
 
@@ -111,7 +117,7 @@ import random, time, bcrypt
 
 
 
-OTP_EXPIRY = 300  # 5 minutes
+OTP_EXPIRY = 120  # 5 minutes
 change_pwd_otp_store = {}
 
 # ---------------- SHOW PAGE ----------------
@@ -144,6 +150,7 @@ def send_change_otp():
     user = cur.fetchone()
 
     email = user["email"]
+    clean_expired_otps(change_pwd_otp_store)
     otp = random.randint(100000, 999999)
 
     change_pwd_otp_store[session["user_id"]] = {
@@ -248,6 +255,7 @@ def delete_account_otp():
 
     user = session["user"]
     session["user_id"] = user["id"]
+    clean_expired_otps(change_pwd_otp_store)
 
     otp = str(random.randint(100000, 999999))
 
@@ -368,6 +376,8 @@ def signup():
     cur.execute("SELECT id FROM users WHERE email=%s", (email,))
     if cur.fetchone():
         return jsonify({"success": False, "message": "Email already registered"})
+
+    clean_expired_otps(signup_otp_store)
 
     # generate OTP
     otp = str(random.randint(100000, 999999))
@@ -1085,6 +1095,7 @@ def send_change_password_otp():
     if not email or not new_password:
         return jsonify({"error": "Email and password required"}), 400
 
+    clean_expired_otps(delete_otp_store)
     otp = random.randint(100000, 999999)
 
     # store OTP in memory
@@ -1263,6 +1274,9 @@ def admin_pending_orders():
     """)
     orders = cur.fetchall()
 
+    cur.close()
+    db.close()
+
     return render_template(
         "admin_orders.html",
         orders=orders,
@@ -1285,6 +1299,9 @@ def admin_completed_orders():
         ORDER BY o.created_at DESC
     """)
     orders = cur.fetchall()
+
+    cur.close()
+    db.close()
 
     return render_template(
         "admin_orders.html",
@@ -1346,6 +1363,9 @@ def admin_order_detail(order_id):
     """, (order_id,))
     history = cur.fetchall()
 
+    cur.close()
+    db.close()
+
     return render_template(
         "admin_order_detail.html",
         order=order,
@@ -1370,6 +1390,9 @@ def admin_users():
     """)
     users = cur.fetchall()
 
+    cur.close()
+    db.close()
+
     return render_template("admin_users.html", users=users)
 
 
@@ -1389,6 +1412,9 @@ def admin_cart():
         ORDER BY c.added_at DESC
     """)
     cart_items = cur.fetchall()
+
+    cur.close()
+    db.close()
 
     return render_template("admin_cart.html", cart_items=cart_items)
 
@@ -1443,6 +1469,10 @@ def admin_add_product():
         filename
     ))
     db.commit()
+
+    cur.close()
+    db.close()
+
     return redirect("/admin/dashboard")
 
 
@@ -1502,6 +1532,10 @@ def admin_edit_product(product_id):
     ))
 
     db.commit()
+
+    cur.close()
+    db.close()
+
     return redirect("/admin/dashboard")
 
 
@@ -1575,6 +1609,9 @@ def order_track(order_id):
     """, (order_id,))
 
     items = cur.fetchall()
+
+    cur.close()
+    db.close()
 
     return render_template(
         "order_track.html",
@@ -1696,6 +1733,9 @@ def invoice(order_id):
     """, (order_id,))
     items = cur.fetchall()
 
+    cur.close()
+    db.close()
+
     return render_template(
         "invoice.html",
         order=order,
@@ -1748,6 +1788,9 @@ def invoice_page(order_id):
     """, (order_id,))
     items = cur.fetchall()
     print("INVOICE ITEMS:", items)
+
+    cur.close()
+    db.close()
 
     return render_template(
         "invoice.html",
