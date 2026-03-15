@@ -927,10 +927,12 @@ def checkout():
     cur.close()
     db.close()
 
-    return render_template("checkout.html",
+    return render_template(
+        "checkout.html",
         cart_items=cart_items,
         total=total,
-        address=address
+        address=address,
+        razorpay_key=os.environ.get("RAZORPAY_KEY_ID")
     )
 
 
@@ -1825,6 +1827,44 @@ def invoice_page(order_id):
         address=address,
         items=items
     )
+
+# ================== CREATE RAZORPAY ORDER ==================
+
+@app.route("/create-razorpay-order", methods=["POST"])
+def create_razorpay_order():
+
+    if not session.get("user"):
+        return jsonify({"error": "login_required"}), 401
+
+    user_id = session["user"]["id"]
+
+    db = get_db()
+    cur = db.cursor(dictionary=True)
+
+    # get cart items
+    cur.execute("""
+        SELECT c.quantity, p.price
+        FROM cart c
+        JOIN products p ON c.product_id = p.id
+        WHERE c.user_id=%s
+    """, (user_id,))
+    items = cur.fetchall()
+
+    if not items:
+        return jsonify({"error": "cart_empty"})
+
+    total = sum(i["price"] * i["quantity"] for i in items)
+
+    amount = int(total * 100)  # Razorpay uses paise
+
+    order = client.order.create({
+        "amount": amount,
+        "currency": "INR",
+        "payment_capture": 1
+    })
+
+    return jsonify(order)
+
 
 
 
