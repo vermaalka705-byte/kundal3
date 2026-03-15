@@ -1851,6 +1851,8 @@ def create_razorpay_order():
     items = cur.fetchall()
 
     if not items:
+        cur.close()
+        db.close()
         return jsonify({"error": "cart_empty"})
 
     total = sum(i["price"] * i["quantity"] for i in items)
@@ -1862,6 +1864,9 @@ def create_razorpay_order():
         "currency": "INR",
         "payment_capture": 1
     })
+
+    cur.close()
+    db.close()
 
     return jsonify(order)
 
