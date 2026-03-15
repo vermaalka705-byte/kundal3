@@ -1870,6 +1870,29 @@ def create_razorpay_order():
 
     return jsonify(order)
 
+# ================== verify razorpay payment ==================
+@app.route("/verify-payment", methods=["POST"])
+def verify_payment():
+
+    data = request.get_json()
+
+    payment_id = data.get("razorpay_payment_id")
+    order_id = data.get("razorpay_order_id")
+    signature = data.get("razorpay_signature")
+
+    try:
+
+        client.utility.verify_payment_signature({
+            "razorpay_order_id": order_id,
+            "razorpay_payment_id": payment_id,
+            "razorpay_signature": signature
+        })
+
+        return jsonify({"status":"success"})
+
+    except razorpay.errors.SignatureVerificationError:
+
+        return jsonify({"status":"failed"})
 
 
 
