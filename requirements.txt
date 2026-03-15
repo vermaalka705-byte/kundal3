@@ -4,3 +4,4 @@ mysql-connector-python
 bcrypt
 flask-cors
 requests
+razorpay
