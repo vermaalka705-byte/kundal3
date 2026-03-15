@@ -938,77 +938,97 @@ def checkout():
 
 @app.route("/place-order", methods=["POST"])
 def place_order():
+
     if not session.get("user"):
         return redirect("/login")
 
     user_id = session["user"]["id"]
+    payment_method = request.form.get("payment_method", "cod")
+
     db = get_db()
     cur = db.cursor(dictionary=True)
 
-    # 🔒 VERIFY STOCK FOR EACH CART ITEM
-    cur.execute("""
-        SELECT c.product_id, c.quantity, p.stock
-        FROM cart c
-        JOIN products p ON p.id = c.product_id
-        WHERE c.user_id=%s
-    """, (user_id,))
-    cart_items = cur.fetchall()
+    try:
 
-    if not cart_items:
-        flash("Your cart is empty")
-        return redirect("/cart")
+        # 🔒 VERIFY CART STOCK
+        cur.execute("""
+            SELECT c.product_id, c.quantity, p.stock
+            FROM cart c
+            JOIN products p ON p.id = c.product_id
+            WHERE c.user_id=%s
+        """, (user_id,))
+        cart_items = cur.fetchall()
 
-    for item in cart_items:
-        if item["quantity"] > item["stock"]:
-            flash("One or more items are out of stock")
+        if not cart_items:
+            flash("Your cart is empty")
             return redirect("/cart")
 
-    cur.execute(
-        "SELECT id FROM addresses WHERE user_id=%s AND is_default=1",
-        (user_id,)
-    )
-    address = cur.fetchone()
-    if not address:
-        return redirect("/address")
+        for item in cart_items:
+            if item["quantity"] > item["stock"]:
+                flash("One or more items are out of stock")
+                return redirect("/cart")
 
-    cur.execute("""
-        SELECT c.product_id, c.quantity, p.price
-        FROM cart c
-        JOIN products p ON c.product_id = p.id
-        WHERE c.user_id=%s
-    """, (user_id,))
-    items = cur.fetchall()
-
-    if not items:
-        return redirect("/cart")
-
-    total = sum(i["price"] * i["quantity"] for i in items)
-
-    cur.execute("""
-        INSERT INTO orders (user_id, address_id, total_amount)
-        VALUES (%s,%s,%s)
-    """, (user_id, address["id"], total))
-    order_id = cur.lastrowid
-
-    for i in items:
+        # 📍 GET DEFAULT ADDRESS
         cur.execute("""
-            INSERT INTO order_items (order_id, product_id, quantity, price)
+            SELECT id
+            FROM addresses
+            WHERE user_id=%s AND is_default=1
+        """, (user_id,))
+        address = cur.fetchone()
+
+        if not address:
+            return redirect("/address")
+
+        # 📦 GET CART ITEMS WITH PRICE
+        cur.execute("""
+            SELECT c.product_id, c.quantity, p.price
+            FROM cart c
+            JOIN products p ON c.product_id = p.id
+            WHERE c.user_id=%s
+        """, (user_id,))
+        items = cur.fetchall()
+
+        if not items:
+            return redirect("/cart")
+
+        # 💰 CALCULATE TOTAL
+        total = sum(i["price"] * i["quantity"] for i in items)
+
+        # 📝 CREATE ORDER
+        cur.execute("""
+            INSERT INTO orders (user_id, address_id, total_amount, payment_method)
             VALUES (%s,%s,%s,%s)
-        """, (order_id, i["product_id"], i["quantity"], i["price"]))
-        cur.execute("""
-        UPDATE products
-        SET stock = stock - %s
-        WHERE id=%s
-    """, (i["quantity"], i["product_id"]))
+        """, (user_id, address["id"], total, payment_method))
 
-    cur.execute("DELETE FROM cart WHERE user_id=%s", (user_id,))
-    db.commit()
+        order_id = cur.lastrowid
 
-    cur.close()
-    db.close()
+        # 📦 INSERT ORDER ITEMS
+        for i in items:
+
+            cur.execute("""
+                INSERT INTO order_items (order_id, product_id, quantity, price)
+                VALUES (%s,%s,%s,%s)
+            """, (order_id, i["product_id"], i["quantity"], i["price"]))
+
+            # 🔻 UPDATE STOCK
+            cur.execute("""
+                UPDATE products
+                SET stock = stock - %s
+                WHERE id=%s
+            """, (i["quantity"], i["product_id"]))
+
+        # 🛒 CLEAR CART
+        cur.execute("DELETE FROM cart WHERE user_id=%s", (user_id,))
+
+        db.commit()
+
+    finally:
+        cur.close()
+        db.close()
+
+    flash("Order placed successfully!")
 
     return redirect("/orders")
-
 
 # ================== ORDERS ==================
 

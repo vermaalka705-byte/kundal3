@@ -203,7 +203,9 @@ order_id:data.id,
 
 handler:function(response){
 
-window.location.href="/payment-success";
+// After successful payment submit order
+document.getElementById("payment_method").value="online";
+document.getElementById("orderForm").submit();
 
 }
 
@@ -216,6 +218,7 @@ rzp.open();
 
 }else{
 
+// COD
 document.getElementById("orderForm").submit();
 
 }
