@@ -3,14 +3,21 @@ from flask_cors import CORS
 import bcrypt, random, time, os
 from werkzeug.utils import secure_filename
 import mysql.connector
+import razorpay
 from db import get_db, init_tables
 from email_otp import send_otp
 from flask import abort
 
 
+
 app = Flask(__name__, template_folder="templates")
 app.secret_key = "retech_secret_key"
 CORS(app)
+
+client = razorpay.Client(auth=(
+    os.environ.get("RAZORPAY_KEY_ID"),
+    os.environ.get("RAZORPAY_KEY_SECRET")
+))
 
 try:
     with app.app_context():
