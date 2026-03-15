@@ -13,58 +13,58 @@
 
 <style>
 :root{
-    --rose-dark:#8b4a55;
-    --rose-main:#b76e79;
-    --rose-light:#f7d6cc;
-    --soft:#fdf8f2;
+--rose-dark:#8b4a55;
+--rose-main:#b76e79;
+--rose-light:#f7d6cc;
+--soft:#fdf8f2;
 }
 
 body{
-    font-family:'Poppins',sans-serif;
-    background:var(--soft);
-    padding-top:80px;
+font-family:'Poppins',sans-serif;
+background:var(--soft);
+padding-top:80px;
 }
 
 .navbar{
-    background:rgba(255,255,255,0.85);
-    backdrop-filter:blur(10px);
+background:rgba(255,255,255,0.85);
+backdrop-filter:blur(10px);
 }
 
 .navbar-brand{
-    font-family:'Cinzel',serif;
-    font-size:28px;
-    letter-spacing:3px;
-    background:linear-gradient(135deg,var(--rose-dark),var(--rose-main),var(--rose-light));
-    -webkit-background-clip:text;
-    -webkit-text-fill-color:transparent;
+font-family:'Cinzel',serif;
+font-size:28px;
+letter-spacing:3px;
+background:linear-gradient(135deg,var(--rose-dark),var(--rose-main),var(--rose-light));
+-webkit-background-clip:text;
+-webkit-text-fill-color:transparent;
 }
 
 .box{
-    background:#fff;
-    padding:30px;
-    border-radius:20px;
-    box-shadow:0 15px 40px rgba(0,0,0,0.08);
-    margin-bottom:25px;
+background:#fff;
+padding:30px;
+border-radius:20px;
+box-shadow:0 15px 40px rgba(0,0,0,0.08);
+margin-bottom:25px;
 }
 
 .btn-success{
-    background:linear-gradient(135deg,var(--rose-main),var(--rose-light));
-    border:none;
-    border-radius:50px;
-    font-size:18px;
+background:linear-gradient(135deg,var(--rose-main),var(--rose-light));
+border:none;
+border-radius:50px;
+font-size:18px;
 }
 
 .section-title{
-    font-family:'Playfair Display',serif;
-    margin-bottom:20px;
+font-family:'Playfair Display',serif;
+margin-bottom:20px;
 }
 
 .payment-option{
-    border:1px solid #eee;
-    padding:15px;
-    border-radius:12px;
-    margin-bottom:10px;
-    cursor:pointer;
+border:1px solid #eee;
+padding:15px;
+border-radius:12px;
+margin-bottom:10px;
+cursor:pointer;
 }
 </style>
 </head>
@@ -181,11 +181,11 @@ Online Payment (UPI / Card / Wallet)
 
 function handleOrder(){
 
-let method=document.querySelector('input[name="payment"]:checked').value;
+let method = document.querySelector('input[name="payment"]:checked').value;
 
-document.getElementById("payment_method").value=method;
+document.getElementById("payment_method").value = method;
 
-if(method==="online"){
+if(method === "online"){
 
 fetch("/create-razorpay-order",{
 method:"POST"
@@ -193,17 +193,16 @@ method:"POST"
 .then(res=>res.json())
 .then(data=>{
 
-var options={
-key:"{{ razorpay_key }}",
-amount:data.amount,
-currency:"INR",
-name:"Kundal",
-description:"Order Payment",
-order_id:data.id,
+var options = {
+key: "{{ razorpay_key }}",
+amount: data.amount,
+currency: "INR",
+name: "Kundal",
+description: "Order Payment",
+order_id: data.id,
 
-handler:function(response){
+handler: function (response) {
 
-// After successful payment submit order
 document.getElementById("payment_method").value="online";
 document.getElementById("orderForm").submit();
 
@@ -211,14 +210,16 @@ document.getElementById("orderForm").submit();
 
 };
 
-var rzp=new Razorpay(options);
+var rzp = new Razorpay(options);
 rzp.open();
 
+})
+.catch(err=>{
+alert("Payment system error. Try again.");
 });
 
 }else{
 
-// COD
 document.getElementById("orderForm").submit();
 
 }
